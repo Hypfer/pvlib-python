@@ -10,7 +10,6 @@ import calendar
 import numpy as np
 import pandas as pd
 from scipy.linalg import hankel
-import h5py
 
 from pvlib import atmosphere, tools
 from pvlib.tools import _degrees_to_index
@@ -168,31 +167,7 @@ def lookup_linke_turbidity(time, latitude, longitude, filepath=None,
     Returns
     -------
     turbidity : Series
-
-    Notes
-    -----
-    Linke turbidity is obtained from a file of historical monthly averages.
-    The returned value for each time is either the monthly value or an
-    interpolated value to smooth the transition between months.
-    Interpolation is done on the day of year as determined by UTC.
     """
-
-    # The .h5 file 'LinkeTurbidities.h5' contains a single 2160 x 4320 x 12
-    # matrix of type uint8 called 'LinkeTurbidity'. The rows represent global
-    # latitudes from 90 to -90 degrees; the columns represent global longitudes
-    # from -180 to 180; and the depth (third dimension) represents months of
-    # the year from January (1) to December (12). To determine the Linke
-    # turbidity for a position on the Earth's surface for a given month do the
-    # following: LT = LinkeTurbidity(LatitudeIndex, LongitudeIndex, month).
-    # Note that the numbers within the matrix are 20 * Linke Turbidity,
-    # so divide the number from the file by 20 to get the
-    # turbidity.
-
-    # The nodes of the grid are 5' (1/12=0.0833[arcdeg]) apart.
-    # From Section 8 of Aerosol optical depth and Linke turbidity climatology
-    # http://www.meteonorm.com/images/uploads/downloads/ieashc36_report_TL_AOD_climatologies.pdf
-    # 1st row: 89.9583 S, 2nd row: 89.875 S
-    # 1st column: 179.9583 W, 2nd column: 179.875 W
 
     if filepath is None:
         pvlib_path = os.path.dirname(os.path.abspath(__file__))
@@ -201,8 +176,8 @@ def lookup_linke_turbidity(time, latitude, longitude, filepath=None,
     latitude_index = _degrees_to_index(latitude, coordinate='latitude')
     longitude_index = _degrees_to_index(longitude, coordinate='longitude')
 
-    with h5py.File(filepath, 'r') as lt_h5_file:
-        lts = lt_h5_file['LinkeTurbidity'][latitude_index, longitude_index]
+    with pd.HDFStore(filepath, 'r') as store:
+        lts = store['LinkeTurbidity'][latitude_index, longitude_index]
 
     if interp_turbidity:
         linke_turbidity = _interpolate_turbidity(lts, time)
