@@ -12,7 +12,7 @@ from pvlib._deprecation import pvlibDeprecationWarning
 from .conftest import assert_series_equal, assert_frame_equal
 import pytest
 
-from .conftest import fail_on_pvlib_version
+from .conftest import fail_on_pvlib_version, requires_tables
 
 
 @pytest.fixture(scope='function')
@@ -1787,6 +1787,72 @@ def test_ModelChain_no_extra_kwargs(sapm_dc_snl_ac_system, location):
         ModelChain(sapm_dc_snl_ac_system, location, arbitrary_kwarg='value')
 
 
+@fail_on_pvlib_version('0.10')
+def test_ModelChain_attributes_deprecated_10(sapm_dc_snl_ac_system, location):
+    match = 'Use ModelChain.results'
+    mc = ModelChain(sapm_dc_snl_ac_system, location)
+    with pytest.warns(pvlibDeprecationWarning, match=match):
+        mc.aoi
+    with pytest.warns(pvlibDeprecationWarning, match=match):
+        mc.aoi = 5
+
+
+@requires_tables
+def test_basic_chain_alt_az(sam_data, cec_inverter_parameters,
+                            sapm_temperature_cs5p_220m):
+    times = pd.date_range(start='20160101 1200-0700',
+                          end='20160101 1800-0700', freq='6H')
+    latitude = 32.2
+    longitude = -111
+    surface_tilt = 0
+    surface_azimuth = 0
+    modules = sam_data['sandiamod']
+    module_parameters = modules['Canadian_Solar_CS5P_220M___2009_']
+    temp_model_params = sapm_temperature_cs5p_220m.copy()
+    dc, ac = modelchain.basic_chain(times, latitude, longitude,
+                                    surface_tilt, surface_azimuth,
+                                    module_parameters, temp_model_params,
+                                    cec_inverter_parameters)
+
+    expected = pd.Series(np.array([111.621405, -2.00000000e-02]),
+                         index=times)
+    assert_series_equal(ac, expected)
+
+
+@requires_tables
+def test_basic_chain_altitude_pressure(sam_data, cec_inverter_parameters,
+                                       sapm_temperature_cs5p_220m):
+    times = pd.date_range(start='20160101 1200-0700',
+                          end='20160101 1800-0700', freq='6H')
+    latitude = 32.2
+    longitude = -111
+    altitude = 700
+    surface_tilt = 0
+    surface_azimuth = 0
+    modules = sam_data['sandiamod']
+    module_parameters = modules['Canadian_Solar_CS5P_220M___2009_']
+    temp_model_params = sapm_temperature_cs5p_220m.copy()
+    dc, ac = modelchain.basic_chain(times, latitude, longitude,
+                                    surface_tilt, surface_azimuth,
+                                    module_parameters, temp_model_params,
+                                    cec_inverter_parameters,
+                                    pressure=93194)
+
+    expected = pd.Series(np.array([113.190045, -2.00000000e-02]),
+                         index=times)
+    assert_series_equal(ac, expected)
+
+    dc, ac = modelchain.basic_chain(times, latitude, longitude,
+                                    surface_tilt, surface_azimuth,
+                                    module_parameters, temp_model_params,
+                                    cec_inverter_parameters,
+                                    altitude=altitude)
+
+    expected = pd.Series(np.array([113.189814, -2.00000000e-02]),
+                         index=times)
+    assert_series_equal(ac, expected)
+
+
 def test_complete_irradiance_clean_run(sapm_dc_snl_ac_system, location):
     """The DataFrame should not change if all columns are passed"""
     mc = ModelChain(sapm_dc_snl_ac_system, location)
@@ -1804,6 +1870,7 @@ def test_complete_irradiance_clean_run(sapm_dc_snl_ac_system, location):
                         pd.Series([9, 5], index=times, name='ghi'))
 
 
+@requires_tables
 def test_complete_irradiance(sapm_dc_snl_ac_system, location, mocker):
     """Check calculations"""
     mc = ModelChain(sapm_dc_snl_ac_system, location)
@@ -1836,6 +1903,7 @@ def test_complete_irradiance(sapm_dc_snl_ac_system, location, mocker):
 
 @pytest.mark.filterwarnings("ignore:This function is not safe at the moment")
 @pytest.mark.parametrize("input_type", [tuple, list])
+@requires_tables
 def test_complete_irradiance_arrays(
         sapm_dc_snl_ac_system_same_arrays, location, input_type):
     """ModelChain.complete_irradiance can accept a tuple of weather

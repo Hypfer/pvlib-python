@@ -16,7 +16,7 @@ from pvlib import location
 from pvlib.location import Location, lookup_altitude
 from pvlib.solarposition import declination_spencer71
 from pvlib.solarposition import equation_of_time_spencer71
-from .conftest import requires_ephem
+from .conftest import requires_ephem, requires_tables
 
 
 def test_location_required():
@@ -78,6 +78,7 @@ def times():
                          freq='3h')
 
 
+@requires_tables
 def test_get_clearsky(mocker, times):
     tus = Location(32.2, -111, 'US/Arizona', 700, 'Tucson')
     m = mocker.spy(pvlib.clearsky, 'ineichen')
