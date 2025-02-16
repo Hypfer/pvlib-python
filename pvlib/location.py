@@ -436,13 +436,13 @@ def lookup_altitude(latitude, longitude):
     """
 
     pvlib_path = pathlib.Path(__file__).parent
-    filepath = pvlib_path / 'data' / 'Altitude.h5'
+    filepath = str(pvlib_path / 'data' / 'Altitude.h5')
 
     latitude_index = _degrees_to_index(latitude, coordinate='latitude')
     longitude_index = _degrees_to_index(longitude, coordinate='longitude')
 
-    with h5py.File(filepath, 'r') as alt_h5_file:
-        alt = alt_h5_file['Altitude'][latitude_index, longitude_index]
+    with pd.HDFStore(filepath, 'r') as store:
+        alt = store['Altitude'][latitude_index, longitude_index]
 
     # 255 is a special value that means nodata. Fallback to 0 if nodata.
     if alt == 255:
