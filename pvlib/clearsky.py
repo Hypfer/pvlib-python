@@ -10,7 +10,6 @@ import calendar
 import numpy as np
 import pandas as pd
 from scipy.linalg import hankel
-import h5py
 
 from pvlib import atmosphere, tools
 from pvlib.tools import _degrees_to_index
