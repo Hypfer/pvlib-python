@@ -16,7 +16,7 @@ dependencies = [
     'pytz',
     'requests',
     'scipy >= 1.6.0',
-    'h5py',
+    'tables',
 ]
 license = { text = "BSD-3-Clause" }
 classifiers = [
