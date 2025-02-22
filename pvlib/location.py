@@ -441,8 +441,11 @@ def lookup_altitude(latitude, longitude):
     latitude_index = _degrees_to_index(latitude, coordinate='latitude')
     longitude_index = _degrees_to_index(longitude, coordinate='longitude')
 
-    with pyfive.File(filepath, 'r') as alt_h5_file:
+    alt_h5_file = pyfive.File(filepath)
+    try:
         alt = alt_h5_file['Altitude'][latitude_index, longitude_index]
+    finally:
+        alt_h5_file.close()
 
     # 255 is a special value that means nodata. Fallback to 0 if nodata.
     if alt == 255:

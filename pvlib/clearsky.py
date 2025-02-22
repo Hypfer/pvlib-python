@@ -201,8 +201,11 @@ def lookup_linke_turbidity(time, latitude, longitude, filepath=None,
     latitude_index = _degrees_to_index(latitude, coordinate='latitude')
     longitude_index = _degrees_to_index(longitude, coordinate='longitude')
 
-    with pyfive.File(filepath, 'r') as lt_h5_file:
+    lt_h5_file = pyfive.File(filepath)
+    try:
         lts = lt_h5_file['LinkeTurbidity'][latitude_index, longitude_index]
+    finally:
+        lt_h5_file.close()
 
     if interp_turbidity:
         linke_turbidity = _interpolate_turbidity(lts, time)
