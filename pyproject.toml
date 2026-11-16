@@ -16,7 +16,7 @@ dependencies = [
     'pytz',
     'requests',
     'scipy >= 1.6.0',
-    'pyfive',
+    'pyfive < 1.3',
 ]
 license = { text = "BSD-3-Clause" }
 classifiers = [
